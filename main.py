@@ -4,7 +4,9 @@ dvl = DVLSerialReader(port="/dev/ttyACM0")
 
 try:
     while True:
-        data = dvl.get_latest_data()
-        print(f"DVL:  vx={data.get('vx')}  vy={data.get('vy')} s: {data.get('status')}\n ")
+        # data = dvl.get_latest_data()
+        # print(f"DVL:  vx={data.get('vx')}  vy={data.get('vy')} s: {data.get('status')}")
+        data = dvl.get_latest_imu()
+        print(f"IMU: yaw={data.get('yaw')}")
 except KeyboardInterrupt:
     dvl.stop()

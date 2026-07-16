@@ -10,13 +10,19 @@ class DVLSerialReader:
         print("DVL serial opened")
         self.running = True
         
-        self.lastest_data = {
+        self.latest_data = {
             "vx": 0.0,
             "vy": 0.0,
             "vz": 0.0,
             "status": 'v',
             "timestamp": 0
         }
+
+        self.latest_imu = {
+            "yaw": 0.0,
+            "timestamp": 0 
+        }
+
         self.lock = threading.Lock()
 
         self.thread = threading.Thread(target=self._read_loop, daemon=True)
@@ -26,7 +32,6 @@ class DVLSerialReader:
         arrival_time = time.perf_counter()
 
         parts = [p.strip() for p in line.split(',')]
-        # print(parts)
         try:
             vx = float(parts[1])
             vy = float(parts[2])
@@ -34,7 +39,7 @@ class DVLSerialReader:
             status = parts[5]
 
             with self.lock:
-                self.lastest_data.update({
+                self.latest_data.update({
                     "vx": vx,
                     "vy": vy,
                     "vz": vz,
@@ -42,8 +47,25 @@ class DVLSerialReader:
                     "timestamp": arrival_time
                 })
         except (IndexError,ValueError) as e:
-            print("parse error")
+            print("Parse error")
             return None
+    
+    def _parse_imu(self, line):
+        arrival_time = time.perf_counter()
+
+        parts = [p.strip() for p in line.split(',')]
+        try:
+            yaw = float(parts[2])
+
+            with self.lock:
+                self.latest_imu.update({
+                    "yaw": yaw,
+                    "timestamp": arrival_time
+                })
+        except (IndexError,ValueError) as e:
+            print("Attitude parse error")
+            return None
+        
     
     def _read_loop(self):
         while self.running:
@@ -51,11 +73,18 @@ class DVLSerialReader:
                 line = self.ser.readline().decode('utf-8').strip()
                 if line.startswith(':BI'):
                     self._parse(line)
+                elif line.startswith(':SA'):
+                    self._parse_imu(line)
 
     def get_latest_data(self):
         with self.lock:
-            return self.lastest_data.copy()
+            return self.latest_data.copy()
+    
+    def get_latest_imu(self):
+        with self.lock:
+            return self.latest_imu.copy()
     
     def stop(self):
         self.running = False
         self.ser.close()
+        print("\nDVL serial closed safely")
