@@ -5,7 +5,8 @@ import time
 
 
 class DVLSerialReader:
-    def __init__(self, port, baudrate=115200):
+    def __init__(self, fuser, port, baudrate=115200):
+        self.fuse_callback = fuser
         self.ser = serial.Serial(port, baudrate, timeout=1)
         print("DVL serial opened")
         self.running = True
@@ -46,6 +47,8 @@ class DVLSerialReader:
                     "status": status,
                     "timestamp": arrival_time
                 })
+            if status == 'A':
+                self.fuse_callback(vx, vy, self.get_latest_imu().get("yaw"))
         except (IndexError,ValueError) as e:
             print("Parse error")
             return None
@@ -65,12 +68,11 @@ class DVLSerialReader:
         except (IndexError,ValueError) as e:
             print("Attitude parse error")
             return None
-        
     
     def _read_loop(self):
         while self.running:
             if self.ser.in_waiting:
-                line = self.ser.readline().decode('utf-8').strip()
+                line = self.ser.readline().decode('utf-8', errors='ignore').strip()
                 if line.startswith(':BI'):
                     self._parse(line)
                 elif line.startswith(':SA'):
