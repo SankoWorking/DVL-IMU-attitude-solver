@@ -48,7 +48,7 @@ class DVLSerialReader:
                     "timestamp": arrival_time
                 })
             if status == 'A':
-                self.fuse_callback(vx, vy, self.get_latest_imu().get("yaw"))
+                self.fuse_callback(vx, vy, self.get_latest_imu().get("yaw"), arrival_time)
         except (IndexError,ValueError) as e:
             print("Parse error")
             return None
