@@ -1,0 +1,32 @@
+# Keil / ARM build outputs
+MDK-ARM/H743/
+Bootloader/MDK-ARM/Bootloader/
+LUXIAOBAN_DEMO/**/MDK-ARM/STM32H743/
+**/MDK-ARM/**/*.o
+**/MDK-ARM/**/*.d
+**/MDK-ARM/**/*.crf
+**/MDK-ARM/**/*.axf
+**/MDK-ARM/**/*.elf
+**/MDK-ARM/**/*.hex
+**/MDK-ARM/**/*.bin
+**/MDK-ARM/**/*.map
+**/MDK-ARM/**/*.lst
+**/MDK-ARM/**/*.dep
+**/MDK-ARM/**/*.lnp
+**/MDK-ARM/**/*.log
+**/MDK-ARM/**/*.htm
+**/MDK-ARM/**/*.Bak
+
+# Keil user/session files
+*.uvgui.*
+*.uvguix.*
+
+# Local generated helper/build files
+.codex_*
+**/MDK-ARM/codex_obj/
+**/MDK-ARM/codex_*.log
+**/MDK-ARM/codex_*.lnp
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db

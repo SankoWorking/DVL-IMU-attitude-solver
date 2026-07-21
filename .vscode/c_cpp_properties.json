@@ -1,0 +1,39 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "H743-Keil",
+            "compilerPath": "D:/Keil5/ARM/ARMCC/bin/armcc.exe",
+            "intelliSenseMode": "gcc-arm",
+            "cStandard": "c99",
+            "cppStandard": "c++14",
+            "defines": [
+                "USE_PWR_LDO_SUPPLY",
+                "USE_HAL_DRIVER",
+                "STM32H743xx",
+                "__CC_ARM",
+                "__ARMCC_VERSION=5060000"
+            ],
+            "includePath": [
+                "${workspaceFolder}/Core/Inc",
+                "${workspaceFolder}/Drivers/STM32H7xx_HAL_Driver/Inc",
+                "${workspaceFolder}/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32H7xx/Include",
+                "${workspaceFolder}/Drivers/CMSIS/Include",
+                "${workspaceFolder}/Drivers/CMSIS/RTOS2/Include",
+                "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/include",
+                "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
+                "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/Core/Inc",
+                    "${workspaceFolder}/Core/Src",
+                    "${workspaceFolder}/Drivers",
+                    "${workspaceFolder}/Middlewares"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
+        }
+    ]
+}

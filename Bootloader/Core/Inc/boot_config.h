@@ -1,0 +1,17 @@
+#ifndef BOOT_CONFIG_H
+#define BOOT_CONFIG_H
+
+#include <stdint.h>
+
+#define BOOTLOADER_FLASH_BASE      0x08000000UL
+#define BOOTLOADER_SIZE_BYTES      0x00040000UL
+#define APP_FLASH_BASE             0x08040000UL
+#define APP_FLASH_END              0x08200000UL
+#define APP_FLASH_SIZE_BYTES       (APP_FLASH_END - APP_FLASH_BASE)
+#define STM32H743_FLASH_SECTOR_SZ  0x00020000UL
+
+#define MSC_BLOCK_SIZE             512U
+#define MSC_BLOCK_COUNT            512U
+#define MSC_DISK_SIZE_BYTES        (MSC_BLOCK_SIZE * MSC_BLOCK_COUNT)
+
+#endif

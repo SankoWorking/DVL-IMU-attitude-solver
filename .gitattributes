@@ -1,0 +1,15 @@
+* -text
+
+# Binary files
+*.axf binary
+*.bin binary
+*.bmp binary
+*.elf binary
+*.gif binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.lib binary
+*.o binary
+*.pdf binary
+*.png binary
