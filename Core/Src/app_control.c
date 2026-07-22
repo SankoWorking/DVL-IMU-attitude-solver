@@ -703,7 +703,9 @@ void UART5_rxCallback(uint8_t *packet, uint16_t size)
 
 void UART6_rxCallback(uint8_t *packet, uint16_t size)
 {
-    VlsH5_InputBytes(packet, size);
+		(void)packet;
+		(void)size;
+    //VlsH5_InputBytes(packet, size);
 }
 
 void UART7_rxCallback(uint8_t *packet, uint16_t size)
@@ -773,12 +775,12 @@ static void Uart_Send_Task(void *argument)
 static void App_LogSensorStatus(void)
 {
     const Jy901sUartData_t *imu;
-    const VlsH5Data_t *vls;
+    //const VlsH5Data_t *vls;
 		DVL_Data_t dvl;
     imu = Jy901sUart_GetData();
-    vls = VlsH5_GetData();
+    //vls = VlsH5_GetData();
 		DvlUart_GetData(&dvl);
-    App_LogDvlStatus();
+    //App_LogDvlStatus();
 		
 		Log_Printf("[DVL] vx=%.3f vy=%.3f vz=%.3f ve=%.3f status=%c frames=%lu errors=%lu\r\n",
                dvl.vx,
@@ -788,7 +790,8 @@ static void App_LogSensorStatus(void)
                dvl.status,
                (unsigned long)dvl.frame_count,
                (unsigned long)dvl.checksum_error_count);
-    Log_Printf("[A23-1] filtered=%u raw=%u/%u frames=%lu checksum_errors=%lu uart_rx=%lu uart_errors=%lu\r\n",
+    /*
+		Log_Printf("[A23-1] filtered=%u raw=%u/%u frames=%lu checksum_errors=%lu uart_rx=%lu uart_errors=%lu\r\n",
                (unsigned int)g_sonar1_mm,
                (unsigned int)Sonar_Front.last_input_distance,
                (unsigned int)Sonar_Front.last_input_distance_ch2,
@@ -817,6 +820,7 @@ static void App_LogSensorStatus(void)
                g_sonar_uart_diag[1].last_bytes[5],
                g_sonar_uart_diag[1].last_bytes[6],
                g_sonar_uart_diag[1].last_bytes[7]);
+		*/
     Log_Printf("[JY901S] fresh=%u valid=0x%02X roll=%.2f pitch=%.2f yaw=%.2f frames=%lu errors=%lu\r\n",
                (unsigned int)Jy901sUart_IsFresh(JY901S_FRESH_TIMEOUT_MS),
                (unsigned int)imu->valid_mask,
@@ -830,6 +834,7 @@ static void App_LogSensorStatus(void)
                (unsigned long)App_UART_GetErrorCount(APP_UART_7),
                (unsigned int)App_UART_GetStreamOverflowCount(APP_UART_7),
                (unsigned long)App_UART_GetBaudRate(APP_UART_7));
+		/*
     Log_Printf("[VLS-H5] running=%u front=%u right=%u left=%u rear=%u mm frames=%lu crc_errors=%lu ack=%lu\r\n",
                (unsigned int)vls->running,
                (unsigned int)g_vls_front_mm,
@@ -855,6 +860,7 @@ static void App_LogSensorStatus(void)
                (unsigned int)vls->last_bytes[5],
                (unsigned int)vls->last_bytes[6],
                (unsigned int)vls->last_bytes[7]);
+		*/
     Log_Printf("[USB-CDC] tx_recoveries=%lu\r\n",
                (unsigned long)UsbCdcPort_GetTxRecoveryCount());
 }
@@ -966,6 +972,7 @@ static void Sensor_Task(void *argument)
 
     for (;;)
     {
+				/*
         Sonic_Trigger(2U);
         osDelay(SONAR_TRIGGER_GAP_MS);
         Sonic_Trigger(4U);
@@ -979,6 +986,7 @@ static void Sensor_Task(void *argument)
         g_sonar2_mm = g_sonic_uart4;
         g_sonar_front_mm = g_sonar1_mm;
         g_sonar_right_mm = g_sonar2_mm;
+				*/
 
         now = osKernelGetTickCount();
         imu = Jy901sUart_GetData();
@@ -1003,7 +1011,8 @@ static void Sensor_Task(void *argument)
             App_RequestJy901sOutput();
             last_jy901s_probe_tick = now;
         }
-
+				
+				/*
         vls = VlsH5_GetData();
         if ((vls->frame_count == 0U) &&
             ((last_vls_probe_tick == 0U) ||
@@ -1035,7 +1044,7 @@ static void Sensor_Task(void *argument)
         g_vls_right_mm = VlsH5_GetSectorDistanceMm(VLS_H5_SECTOR_RIGHT);
         g_vls_left_mm = VlsH5_GetSectorDistanceMm(VLS_H5_SECTOR_LEFT);
         g_vls_rear_mm = VlsH5_GetSectorDistanceMm(VLS_H5_SECTOR_REAR);
-
+				*/
         if ((now - last_report_tick) >= SENSOR_REPORT_PERIOD_MS)
         {
             App_LogSensorStatus();
@@ -1049,24 +1058,18 @@ static void Sensor_Task(void *argument)
 void App_Tasks_Init(void)
 {
     App_UART_SetMode(APP_UART_1, APP_UART_MODE_STREAM);
-    App_UART_SetMode(APP_UART_6, APP_UART_MODE_STREAM);
+    //App_UART_SetMode(APP_UART_6, APP_UART_MODE_STREAM);
     App_UART_SetMode(APP_UART_7, APP_UART_MODE_STREAM);
-    Sonar_Filter_Init();
-    VlsH5_Init(APP_UART_6);
+    //Sonar_Filter_Init();
+    //VlsH5_Init(APP_UART_6);
     Jy901sUart_Init();
 
     Log_Printf("[DVL] USART1 PA9(TX)/PA10(RX), 115200 8N1, hex log every 1s\r\n");
-    Log_Printf("[A23] sonar1 PA2/PA3; sonar2 PD1(TX)/PD0(RX), 115200 8N1\r\n");
+    //Log_Printf("[A23] sonar1 PA2/PA3; sonar2 PD1(TX)/PD0(RX), 115200 8N1\r\n");
     Log_Printf("[JY901S] UART7 PE8(TX)/PE7(RX), auto baud starting at 9600 8N1\r\n");
-    Log_Printf("[VLS-H5] USART6 PC6(TX)/PC7(RX), auto baud scan\r\n");
-		Log_Printf("Test Print");
+    //Log_Printf("[VLS-H5] USART6 PC6(TX)/PC7(RX), auto baud scan\r\n");
     App_LogMotorUsage();
 		
-		/**
-			Uart_Parse_Task 串口解析函数
-			NULL 任务参数
-			uart_parse_task_attributes 任务配置
-		*/
     (void)osThreadNew(Uart_Parse_Task, NULL, &uart_parse_task_attributes);
     (void)osThreadNew(Uart_Send_Task, NULL, &uart_send_task_attributes);
     (void)osThreadNew(Sensor_Task, NULL, &sensor_task_attributes);
