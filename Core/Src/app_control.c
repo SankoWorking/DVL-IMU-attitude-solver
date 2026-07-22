@@ -21,6 +21,7 @@
 #define SONAR_TRIGGER_GAP_MS          35U
 #define SONAR_RESPONSE_WAIT_MS        100U
 #define SONAR_COLLECT_PERIOD_MS       100U
+#define DVL_COLLECT_PERIOD_MS					100U
 #define SENSOR_REPORT_PERIOD_MS       1000U
 #define JY901S_FRESH_TIMEOUT_MS       500U
 #define VLS_H5_BAUD_PROBE_MS          2000U
@@ -69,7 +70,7 @@ static volatile uint32_t g_dvl_total_rx = 0U;
 
 static void Uart_Parse_Task(void *argument);
 static void Uart_Send_Task(void *argument);
-static void Sensor_Task(void *argument);
+//static void Sensor_Task(void *argument);
 static void App_LogSensorStatus(void);
 //static void App_LogDvlStatus(void);
 static void App_RequestJy901sOutput(void);
@@ -953,27 +954,28 @@ static void App_RequestJy901sOutput(void)
     (void)App_UART_Send(APP_UART_7, output_cmd, (uint16_t)sizeof(output_cmd));
 }
 
+/*
 static void Sensor_Task(void *argument)
 {
     uint32_t last_report_tick;
-    //uint32_t last_vls_probe_tick;
+    uint32_t last_vls_probe_tick;
     uint32_t last_jy901s_probe_tick;
     uint32_t now;
-    //const VlsH5Data_t *vls;
+    const VlsH5Data_t *vls;
     const Jy901sUartData_t *imu;
     uint8_t jy901s_baud_index;
-    //uint8_t vls_h5_baud_index;
+    uint8_t vls_h5_baud_index;
 
     (void)argument;
     last_report_tick = osKernelGetTickCount();
-    //last_vls_probe_tick = 0U;
+    last_vls_probe_tick = 0U;
     last_jy901s_probe_tick = 0U;
     jy901s_baud_index = 0U;
-    //vls_h5_baud_index = 0U;
+    vls_h5_baud_index = 0U;
 
     for (;;)
     {
-				/*
+				
         Sonic_Trigger(2U);
         osDelay(SONAR_TRIGGER_GAP_MS);
         Sonic_Trigger(4U);
@@ -987,7 +989,6 @@ static void Sensor_Task(void *argument)
         g_sonar2_mm = g_sonic_uart4;
         g_sonar_front_mm = g_sonar1_mm;
         g_sonar_right_mm = g_sonar2_mm;
-				*/
 
         now = osKernelGetTickCount();
         imu = Jy901sUart_GetData();
@@ -1013,7 +1014,6 @@ static void Sensor_Task(void *argument)
             last_jy901s_probe_tick = now;
         }
 				
-				/*
         vls = VlsH5_GetData();
         if ((vls->frame_count == 0U) &&
             ((last_vls_probe_tick == 0U) ||
@@ -1045,14 +1045,68 @@ static void Sensor_Task(void *argument)
         g_vls_right_mm = VlsH5_GetSectorDistanceMm(VLS_H5_SECTOR_RIGHT);
         g_vls_left_mm = VlsH5_GetSectorDistanceMm(VLS_H5_SECTOR_LEFT);
         g_vls_rear_mm = VlsH5_GetSectorDistanceMm(VLS_H5_SECTOR_REAR);
-				*/
+				
         if ((now - last_report_tick) >= SENSOR_REPORT_PERIOD_MS)
         {
             App_LogSensorStatus();
             last_report_tick = now;
         }
 
-        osDelay(SONAR_COLLECT_PERIOD_MS);
+        osDelay(DVL_COLLECT_PERIOD_MS);
+    }
+}
+*/
+
+
+static void DVL_IMU_Fusion_Task(void *argument)
+{
+	
+    uint32_t last_report_tick;
+    uint32_t last_jy901s_probe_tick;
+    uint32_t now;
+    const Jy901sUartData_t *imu;
+		DVL_Data_t dvl = {0};
+    uint8_t jy901s_baud_index;
+
+    (void)argument;
+    last_report_tick = osKernelGetTickCount();
+    last_jy901s_probe_tick = 0U;
+    jy901s_baud_index = 0U;
+
+    for (;;)
+    {
+        now = osKernelGetTickCount();
+				DvlUart_GetData(&dvl);
+        imu = Jy901sUart_GetData();
+        if ((imu->frame_count == 0U) &&
+            ((last_jy901s_probe_tick == 0U) ||
+             ((now - last_jy901s_probe_tick) >= JY901S_BAUD_PROBE_MS)))
+        {
+            if (last_jy901s_probe_tick != 0U)
+            {
+                jy901s_baud_index++;
+                if (jy901s_baud_index >=
+                    (uint8_t)(sizeof(jy901s_baud_candidates) / sizeof(jy901s_baud_candidates[0])))
+                {
+                    jy901s_baud_index = 0U;
+                }
+
+                (void)App_UART_SetBaudRate(APP_UART_7,
+                                           jy901s_baud_candidates[jy901s_baud_index]);
+                Jy901sUart_Init();
+            }
+
+            App_RequestJy901sOutput();
+            last_jy901s_probe_tick = now;
+        }
+				
+        if ((now - last_report_tick) >= SENSOR_REPORT_PERIOD_MS)
+        {
+            App_LogSensorStatus();
+            last_report_tick = now;
+        }
+
+        osDelay(DVL_COLLECT_PERIOD_MS);
     }
 }
 
@@ -1073,5 +1127,5 @@ void App_Tasks_Init(void)
 		
     (void)osThreadNew(Uart_Parse_Task, NULL, &uart_parse_task_attributes);
     (void)osThreadNew(Uart_Send_Task, NULL, &uart_send_task_attributes);
-    (void)osThreadNew(Sensor_Task, NULL, &sensor_task_attributes);
+    (void)osThreadNew(DVL_IMU_Fusion_Task, NULL, &sensor_task_attributes);
 }

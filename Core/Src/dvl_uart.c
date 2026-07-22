@@ -78,6 +78,8 @@ void DvlUart_InputBytes(const uint8_t *data, uint16_t len){
 
 void DvlUart_GetData(DVL_Data_t *out_data)
 {
+		osKernelLock();
     if (out_data == NULL) return;
     *out_data = g_dvl_uart_data;
+		osKernelUnlock();
 }
