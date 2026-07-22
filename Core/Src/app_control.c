@@ -62,7 +62,7 @@ uint16_t g_vls_rear_mm = DISABLED_RANGE_INVALID_MM;
 static uint8_t g_usb_command_buf[USB_COMMAND_BUF_SIZE];
 static uint16_t g_usb_command_len = 0U;
 static SonarUartDiag_t g_sonar_uart_diag[2];
-static uint8_t g_dvl_log_bytes[DVL_LOG_BYTES_MAX];
+//static uint8_t g_dvl_log_bytes[DVL_LOG_BYTES_MAX];
 static volatile uint16_t g_dvl_log_len = 0U;
 static volatile uint32_t g_dvl_interval_rx = 0U;
 static volatile uint32_t g_dvl_total_rx = 0U;
@@ -71,7 +71,7 @@ static void Uart_Parse_Task(void *argument);
 static void Uart_Send_Task(void *argument);
 static void Sensor_Task(void *argument);
 static void App_LogSensorStatus(void);
-static void App_LogDvlStatus(void);
+//static void App_LogDvlStatus(void);
 static void App_RequestJy901sOutput(void);
 static void App_DebugCommand_ProcessBytes(const uint8_t *packet, uint16_t size);
 static void App_EnterUsbDiskBootloader(void);
@@ -109,7 +109,7 @@ static const uint32_t jy901s_baud_candidates[] =
     19200U,
     4800U,
 };
-
+/*
 static const uint32_t vls_h5_baud_candidates[] =
 {
     230400U,
@@ -119,7 +119,7 @@ static const uint32_t vls_h5_baud_candidates[] =
     921600U,
     57600U,
 };
-
+*/
 static void Log_Ring_WriteBlock(const uint8_t *data, uint16_t len)
 {
     uint32_t primask;
@@ -625,7 +625,7 @@ static void App_DebugCommand_ProcessBytes(const uint8_t *packet, uint16_t size)
 void UART1_rxCallback(uint8_t *packet, uint16_t size)
 {
     uint32_t primask;
-    uint16_t i;
+    //uint16_t i;
 
     if ((packet == NULL) || (size == 0U))
     {
@@ -634,7 +634,7 @@ void UART1_rxCallback(uint8_t *packet, uint16_t size)
 
     primask = __get_PRIMASK();
     __disable_irq();
-
+		/*
     g_dvl_interval_rx += size;
     g_dvl_total_rx += size;
     for (i = 0U; (i < size) && (g_dvl_log_len < DVL_LOG_BYTES_MAX); i++)
@@ -642,7 +642,7 @@ void UART1_rxCallback(uint8_t *packet, uint16_t size)
         g_dvl_log_bytes[g_dvl_log_len] = packet[i];
         g_dvl_log_len++;
     }
-		
+		*/
 		DvlUart_InputBytes(packet, size);
 		
     if (primask == 0U)
@@ -865,6 +865,7 @@ static void App_LogSensorStatus(void)
                (unsigned long)UsbCdcPort_GetTxRecoveryCount());
 }
 
+/*
 static void App_LogDvlStatus(void)
 {
     uint8_t bytes[DVL_LOG_BYTES_MAX];
@@ -941,7 +942,7 @@ static void App_LogDvlStatus(void)
     }
     Log_Ring_WriteBlock((const uint8_t *)line, (uint16_t)used);
 }
-
+*/
 static void App_RequestJy901sOutput(void)
 {
     static const uint8_t unlock_cmd[5] = {0xFFU, 0xAAU, 0x69U, 0x88U, 0xB5U};
@@ -955,20 +956,20 @@ static void App_RequestJy901sOutput(void)
 static void Sensor_Task(void *argument)
 {
     uint32_t last_report_tick;
-    uint32_t last_vls_probe_tick;
+    //uint32_t last_vls_probe_tick;
     uint32_t last_jy901s_probe_tick;
     uint32_t now;
-    const VlsH5Data_t *vls;
+    //const VlsH5Data_t *vls;
     const Jy901sUartData_t *imu;
     uint8_t jy901s_baud_index;
-    uint8_t vls_h5_baud_index;
+    //uint8_t vls_h5_baud_index;
 
     (void)argument;
     last_report_tick = osKernelGetTickCount();
-    last_vls_probe_tick = 0U;
+    //last_vls_probe_tick = 0U;
     last_jy901s_probe_tick = 0U;
     jy901s_baud_index = 0U;
-    vls_h5_baud_index = 0U;
+    //vls_h5_baud_index = 0U;
 
     for (;;)
     {
