@@ -161,6 +161,9 @@ USBD_ClassTypeDef  USBD_CDC =
   USBD_CDC_GetOtherSpeedCfgDesc,
   USBD_CDC_GetDeviceQualifierDescriptor,
 #endif /* USE_USBD_COMPOSITE  */
+#if (USBD_SUPPORT_USER_STRING_DESC == 1U)
+  NULL,
+#endif /* USBD_SUPPORT_USER_STRING_DESC  */
 };
 
 #ifndef USE_USBD_COMPOSITE
@@ -172,7 +175,7 @@ __ALIGN_BEGIN static uint8_t USBD_CDC_CfgDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_E
   USB_DESC_TYPE_CONFIGURATION,                /* bDescriptorType: Configuration */
   USB_CDC_CONFIG_DESC_SIZ,                    /* wTotalLength */
   0x00,
-  0x02,                                       /* bNumInterfaces: CDC control, CDC data */
+  0x02,                                       /* bNumInterfaces: 2 interfaces */
   0x01,                                       /* bConfigurationValue: Configuration value */
   0x00,                                       /* iConfiguration: Index of string descriptor
                                                  describing the configuration */
@@ -182,6 +185,8 @@ __ALIGN_BEGIN static uint8_t USBD_CDC_CfgDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_E
   0x80,                                       /* bmAttributes: Bus Powered according to user configuration */
 #endif /* USBD_SELF_POWERED */
   USBD_MAX_POWER,                             /* MaxPower (mA) */
+
+  /*---------------------------------------------------------------------------*/
 
   /* Interface Descriptor */
   0x09,                                       /* bLength: Interface Descriptor size */

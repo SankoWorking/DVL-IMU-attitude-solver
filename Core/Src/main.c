@@ -20,6 +20,7 @@
 #include "main.h"
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -59,9 +60,9 @@ typedef struct
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
+TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
-TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim13;
 TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
@@ -100,23 +101,21 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_TIM6_Init(void);
-static void MX_USART1_UART_Init(void);
-void MX_USART2_UART_Init(void);
-void MX_USART3_UART_Init(void);
-void MX_USART6_UART_Init(void);
-void MX_UART4_Init(void);
-void MX_UART7_Init(void);
-void MX_TIM4_Init(void);
-void MX_TIM13_Init(void);
-void MX_TIM16_Init(void);
-void MX_TIM17_Init(void);
-#if 0
 static void MX_ADC1_Init(void);
+static void MX_TIM6_Init(void);
 static void MX_TIM7_Init(void);
+static void MX_TIM13_Init(void);
+static void MX_TIM16_Init(void);
+static void MX_TIM17_Init(void);
+static void MX_UART4_Init(void);
 static void MX_UART5_Init(void);
+static void MX_UART7_Init(void);
 static void MX_UART8_Init(void);
-#endif
+static void MX_USART1_UART_Init(void);
+static void MX_USART2_UART_Init(void);
+static void MX_USART6_UART_Init(void);
+static void MX_TIM4_Init(void);
+static void MX_USART3_UART_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -189,7 +188,7 @@ void Motor_StopAll(void)
 {
   Motor_SetPercent(MOTOR_OUTPUT_TOP, MOTOR_DIR_CW, TOP_ESC_STOP_DUTY_PERCENT);
   Motor_SetPercent(MOTOR_OUTPUT_RIGHT, MOTOR_DIR_CW, 0U);
-  Motor_SetPercent(MOTOR_OUTPUT_LEFT, MOTOR_DIR_CW, 0U);
+  Motor_SetPercent(MOTOR_OUTPUT_LEFT, MOTOR_DIR_CCW, 0U);
   Motor_SetPercent(MOTOR_OUTPUT_FRONT_ROLLER, MOTOR_DIR_CW, 0U);
 }
 
@@ -237,7 +236,6 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-  __enable_irq();
 
   /* USER CODE BEGIN Init */
 
@@ -255,18 +253,21 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_ADC1_Init();
   MX_TIM6_Init();
-  MX_TIM4_Init();
+  MX_TIM7_Init();
   MX_TIM13_Init();
   MX_TIM16_Init();
   MX_TIM17_Init();
+  MX_UART4_Init();
+  MX_UART5_Init();
+  MX_UART7_Init();
+  MX_UART8_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
-  MX_UART4_Init();
-  MX_UART7_Init();
   MX_USART6_UART_Init();
-  MX_USB_DEVICE_Init();
+  MX_TIM4_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
 	App_UART_Init();
@@ -347,7 +348,7 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_HSI48;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -394,15 +395,12 @@ void PeriphCommonClock_Config(void)
 
   /** Initializes the peripherals clock
   */
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CKPER|RCC_PERIPHCLK_USB;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CKPER;
   PeriphClkInitStruct.CkperClockSelection = RCC_CLKPSOURCE_HSE;
-  PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
-
-  HAL_PWREx_EnableUSBVoltageDetector();
 }
 
 /**
@@ -410,7 +408,7 @@ void PeriphCommonClock_Config(void)
   * @param None
   * @retval None
   */
-void MX_ADC1_Init(void)
+static void MX_ADC1_Init(void)
 {
 
   /* USER CODE BEGIN ADC1_Init 0 */
@@ -475,6 +473,65 @@ void MX_ADC1_Init(void)
 }
 
 /**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 199;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 19999;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
+  HAL_TIM_MspPostInit(&htim4);
+
+}
+
+/**
   * @brief TIM6 Initialization Function
   * @param None
   * @retval None
@@ -517,7 +574,7 @@ static void MX_TIM6_Init(void)
   * @param None
   * @retval None
   */
-void MX_TIM7_Init(void)
+static void MX_TIM7_Init(void)
 {
 
   /* USER CODE BEGIN TIM7_Init 0 */
@@ -551,45 +608,11 @@ void MX_TIM7_Init(void)
 }
 
 /**
-  * @brief TIM4 Initialization Function
-  * @param None
-  * @retval None
-  */
-void MX_TIM4_Init(void)
-{
-  TIM_OC_InitTypeDef sConfigOC = {0};
-
-  htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 199;
-  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 19999;
-  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  HAL_TIM_MspPostInit(&htim4);
-}
-
-/**
   * @brief TIM13 Initialization Function
   * @param None
   * @retval None
   */
-void MX_TIM13_Init(void)
+static void MX_TIM13_Init(void)
 {
 
   /* USER CODE BEGIN TIM13_Init 0 */
@@ -617,7 +640,7 @@ void MX_TIM13_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim13, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
   {
@@ -635,7 +658,7 @@ void MX_TIM13_Init(void)
   * @param None
   * @retval None
   */
-void MX_TIM16_Init(void)
+static void MX_TIM16_Init(void)
 {
 
   /* USER CODE BEGIN TIM16_Init 0 */
@@ -665,7 +688,7 @@ void MX_TIM16_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
@@ -698,7 +721,7 @@ void MX_TIM16_Init(void)
   * @param None
   * @retval None
   */
-void MX_TIM17_Init(void)
+static void MX_TIM17_Init(void)
 {
 
   /* USER CODE BEGIN TIM17_Init 0 */
@@ -728,7 +751,7 @@ void MX_TIM17_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
@@ -761,7 +784,7 @@ void MX_TIM17_Init(void)
   * @param None
   * @retval None
   */
-void MX_UART4_Init(void)
+static void MX_UART4_Init(void)
 {
 
   /* USER CODE BEGIN UART4_Init 0 */
@@ -809,7 +832,7 @@ void MX_UART4_Init(void)
   * @param None
   * @retval None
   */
-void MX_UART5_Init(void)
+static void MX_UART5_Init(void)
 {
 
   /* USER CODE BEGIN UART5_Init 0 */
@@ -857,7 +880,7 @@ void MX_UART5_Init(void)
   * @param None
   * @retval None
   */
-void MX_UART7_Init(void)
+static void MX_UART7_Init(void)
 {
 
   /* USER CODE BEGIN UART7_Init 0 */
@@ -905,7 +928,7 @@ void MX_UART7_Init(void)
   * @param None
   * @retval None
   */
-void MX_UART8_Init(void)
+static void MX_UART8_Init(void)
 {
 
   /* USER CODE BEGIN UART8_Init 0 */
@@ -1001,7 +1024,7 @@ static void MX_USART1_UART_Init(void)
   * @param None
   * @retval None
   */
-void MX_USART2_UART_Init(void)
+static void MX_USART2_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART2_Init 0 */
@@ -1049,7 +1072,7 @@ void MX_USART2_UART_Init(void)
   * @param None
   * @retval None
   */
-void MX_USART3_UART_Init(void)
+static void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
@@ -1064,7 +1087,7 @@ void MX_USART3_UART_Init(void)
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX;
+  huart3.Init.Mode = UART_MODE_TX_RX;
   huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart3.Init.OverSampling = UART_OVERSAMPLING_16;
   huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
@@ -1097,7 +1120,7 @@ void MX_USART3_UART_Init(void)
   * @param None
   * @retval None
   */
-void MX_USART6_UART_Init(void)
+static void MX_USART6_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART6_Init 0 */
@@ -1162,13 +1185,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(MOTOR2_DIR_GPIO_Port, MOTOR2_DIR_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, MOTOR_ROLLER_DIR_Pin|MOTOR2_DIR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(MOTOR_ROLLER_DIR_GPIO_Port, MOTOR_ROLLER_DIR_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(MOTOR3_DIR_GPIO_Port, MOTOR3_DIR_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(MOTOR3_DIR_GPIO_Port, MOTOR3_DIR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : WATER_DO_Pin */
   GPIO_InitStruct.Pin = WATER_DO_Pin;
@@ -1176,8 +1196,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(WATER_DO_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MOTOR2_DIR_Pin MOTOR_ROLLER_DIR_Pin */
-  GPIO_InitStruct.Pin = MOTOR2_DIR_Pin|MOTOR_ROLLER_DIR_Pin;
+  /*Configure GPIO pins : MOTOR_ROLLER_DIR_Pin MOTOR2_DIR_Pin */
+  GPIO_InitStruct.Pin = MOTOR_ROLLER_DIR_Pin|MOTOR2_DIR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -1208,6 +1228,8 @@ static void MX_GPIO_Init(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
+  /* init code for USB_DEVICE */
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;)

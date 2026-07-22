@@ -78,12 +78,12 @@ void Motor_SetPercent(MotorOutput_t motor, MotorDir_t dir, uint8_t duty_percent)
 /* Private defines -----------------------------------------------------------*/
 #define WATER_DO_Pin GPIO_PIN_10
 #define WATER_DO_GPIO_Port GPIOF
+#define MOTOR_ROLLER_DIR_Pin GPIO_PIN_4
+#define MOTOR_ROLLER_DIR_GPIO_Port GPIOA
 #define MOTOR2_DIR_Pin GPIO_PIN_7
 #define MOTOR2_DIR_GPIO_Port GPIOA
 #define MOTOR3_DIR_Pin GPIO_PIN_4
 #define MOTOR3_DIR_GPIO_Port GPIOC
-#define MOTOR_ROLLER_DIR_Pin GPIO_PIN_4
-#define MOTOR_ROLLER_DIR_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
