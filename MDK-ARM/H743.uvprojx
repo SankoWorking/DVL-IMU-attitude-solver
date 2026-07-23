@@ -441,6 +441,11 @@
               <FilePath>..\Core\Src\dvl_uart.c</FilePath>
             </File>
             <File>
+              <FileName>dvl_imu_fuser.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\dvl_imu_fuser.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/main.c</FilePath>
@@ -564,11 +569,6 @@
                   </Cads>
                 </FileArmAds>
               </FileOption>
-            </File>
-            <File>
-              <FileName>dvl_imu_fuser.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\dvl_imu_fuser.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -1081,7 +1081,7 @@ static void DVL_IMU_Fusion_Task(void *argument)
     uint32_t now;
 		uint32_t last_fuse_time;
 		bool first_time = true;
-		Jy901sUartData_t *imu;
+		Jy901sUartData_t imu = {0};
 		DVL_Data_t dvl = {0};
     uint8_t jy901s_baud_index;
 
@@ -1094,8 +1094,8 @@ static void DVL_IMU_Fusion_Task(void *argument)
     {
         now = osKernelGetTickCount();
 				DvlUart_GetData(&dvl);
-				Jy901sUart_GetDataSafe(imu);
-        if ((imu->frame_count == 0U) &&
+				Jy901sUart_GetDataSafe(&imu);
+        if ((imu.frame_count == 0U) &&
             ((last_jy901s_probe_tick == 0U) ||
              ((now - last_jy901s_probe_tick) >= JY901S_BAUD_PROBE_MS)))
         {
@@ -1119,8 +1119,9 @@ static void DVL_IMU_Fusion_Task(void *argument)
 				
 				if (first_time){
 					last_fuse_time = now;
-				}else{
-					DVL_IMU_Fuser(last_fuse_time, now, &dvl, imu);
+					first_time = false;
+				}else if(dvl.status == 'A'){
+					DVL_IMU_Fuser(last_fuse_time, now, &dvl, &imu);
 				}
 				
         if ((now - last_report_tick) >= SENSOR_REPORT_PERIOD_MS)

@@ -146,7 +146,10 @@ const Jy901sUartData_t *Jy901sUart_GetData(void)
 void Jy901sUart_GetDataSafe(Jy901sUartData_t *out_data)
 {
 		osKernelLock();
-    if (out_data == NULL) return;
+    if (out_data == NULL){
+			osKernelUnlock();
+			return;
+		}
     *out_data = g_jy901s_uart_data;
 		osKernelUnlock();
 }
