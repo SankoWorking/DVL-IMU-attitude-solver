@@ -565,6 +565,11 @@
                 </FileArmAds>
               </FileOption>
             </File>
+            <File>
+              <FileName>dvl_imu_fuser.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\dvl_imu_fuser.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

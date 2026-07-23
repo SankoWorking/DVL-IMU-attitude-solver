@@ -1,9 +1,11 @@
 #ifndef DVL_UART_H
-#define DVL_PARSER_H
+#define DVL_UART_H
 
 #include <stdint.h>
 #include <stdbool.h>
 #include "cmsis_os2.h"
+
+#define DVL_IMU_MOUNTING_ANGLE_OFFSET 0
 
 typedef struct{
 	float vx;

@@ -9,10 +9,12 @@
 #include "usb_cdc_port.h"
 #include "vls_h5_lidar.h"
 #include "dvl_uart.h"
+#include "dvl_imu_fuser.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #define LOG_RING_BUF_SIZE            2048U
 #define LOG_TX_CHUNK_SIZE            63U
@@ -778,10 +780,13 @@ static void App_LogSensorStatus(void)
     const Jy901sUartData_t *imu;
     //const VlsH5Data_t *vls;
 		DVL_Data_t dvl;
+		NavigationState_t nav;
     imu = Jy901sUart_GetData();
     //vls = VlsH5_GetData();
 		DvlUart_GetData(&dvl);
     //App_LogDvlStatus();
+		Get_NavigationState(&nav);
+		
 		
 		Log_Printf("[DVL] vx=%.3f vy=%.3f vz=%.3f ve=%.3f status=%c frames=%lu errors=%lu\r\n",
                dvl.vx,
@@ -830,11 +835,19 @@ static void App_LogSensorStatus(void)
                imu->yaw_deg,
                (unsigned long)imu->frame_count,
                (unsigned long)imu->checksum_error_count);
+		Log_Printf("[NAV] pos_x=%.3f pos_y=%.3f vn=%.3f ve=%.3f timestamp=%lu\r\n",
+               nav.pos_x,
+               nav.pos_y,
+               nav.vn,
+               nav.ve,
+               (unsigned long)nav.timestamp);
+		/*
     Log_Printf("[JY901S-UART] rx=%lu errors=%lu overflow=%u baud=%lu\r\n",
                (unsigned long)App_UART_GetRxByteCount(APP_UART_7),
                (unsigned long)App_UART_GetErrorCount(APP_UART_7),
                (unsigned int)App_UART_GetStreamOverflowCount(APP_UART_7),
                (unsigned long)App_UART_GetBaudRate(APP_UART_7));
+		*/
 		/*
     Log_Printf("[VLS-H5] running=%u front=%u right=%u left=%u rear=%u mm frames=%lu crc_errors=%lu ack=%lu\r\n",
                (unsigned int)vls->running,
@@ -862,8 +875,10 @@ static void App_LogSensorStatus(void)
                (unsigned int)vls->last_bytes[6],
                (unsigned int)vls->last_bytes[7]);
 		*/
-    Log_Printf("[USB-CDC] tx_recoveries=%lu\r\n",
+    /*
+		Log_Printf("[USB-CDC] tx_recoveries=%lu\r\n",
                (unsigned long)UsbCdcPort_GetTxRecoveryCount());
+		*/
 }
 
 /*
@@ -1064,7 +1079,9 @@ static void DVL_IMU_Fusion_Task(void *argument)
     uint32_t last_report_tick;
     uint32_t last_jy901s_probe_tick;
     uint32_t now;
-    const Jy901sUartData_t *imu;
+		uint32_t last_fuse_time;
+		bool first_time = true;
+		Jy901sUartData_t *imu;
 		DVL_Data_t dvl = {0};
     uint8_t jy901s_baud_index;
 
@@ -1077,7 +1094,7 @@ static void DVL_IMU_Fusion_Task(void *argument)
     {
         now = osKernelGetTickCount();
 				DvlUart_GetData(&dvl);
-        imu = Jy901sUart_GetData();
+				Jy901sUart_GetDataSafe(imu);
         if ((imu->frame_count == 0U) &&
             ((last_jy901s_probe_tick == 0U) ||
              ((now - last_jy901s_probe_tick) >= JY901S_BAUD_PROBE_MS)))
@@ -1099,6 +1116,12 @@ static void DVL_IMU_Fusion_Task(void *argument)
             App_RequestJy901sOutput();
             last_jy901s_probe_tick = now;
         }
+				
+				if (first_time){
+					last_fuse_time = now;
+				}else{
+					DVL_IMU_Fuser(last_fuse_time, now, &dvl, imu);
+				}
 				
         if ((now - last_report_tick) >= SENSOR_REPORT_PERIOD_MS)
         {

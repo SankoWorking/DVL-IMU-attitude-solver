@@ -1,6 +1,7 @@
 #include "jy901s_uart.h"
 
 #include <string.h>
+#include "cmsis_os2.h"
 
 #define JY901S_UART_HEADER           0x55U
 #define JY901S_UART_TYPE_ACCEL       0x51U
@@ -140,6 +141,14 @@ void Jy901sUart_InputBytes(const uint8_t *data, uint16_t len)
 const Jy901sUartData_t *Jy901sUart_GetData(void)
 {
     return &g_jy901s_uart_data;
+}
+
+void Jy901sUart_GetDataSafe(Jy901sUartData_t *out_data)
+{
+		osKernelLock();
+    if (out_data == NULL) return;
+    *out_data = g_jy901s_uart_data;
+		osKernelUnlock();
 }
 
 uint8_t Jy901sUart_IsFresh(uint32_t timeout_ms)

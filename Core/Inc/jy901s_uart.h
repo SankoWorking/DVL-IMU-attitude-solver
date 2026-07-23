@@ -32,6 +32,7 @@ typedef struct
 void Jy901sUart_Init(void);
 void Jy901sUart_InputBytes(const uint8_t *data, uint16_t len);
 const Jy901sUartData_t *Jy901sUart_GetData(void);
+void Jy901sUart_GetDataSafe(Jy901sUartData_t * out_data);
 uint8_t Jy901sUart_IsFresh(uint32_t timeout_ms);
 
 #endif

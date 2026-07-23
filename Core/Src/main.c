@@ -28,6 +28,7 @@
 #include "uart_port.h"
 #include "usb_device.h"
 #include "main.h"
+#include "dvl_imu_fuser.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -283,6 +284,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
+	DVL_IMU_Fuser_Init();
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
